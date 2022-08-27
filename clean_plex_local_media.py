@@ -1,10 +1,13 @@
 import glob
 import os
 import shutil
+import json
 
+with open("variables.json", "r") as f:
+    variables = json.load(f)
 
-TV_PATH = r"/mnt/user/TV/"
-MOVIE_PATH = r"/mnt/user/Movies/"
+TV_PATH = variables["TV_PATH"]
+MOVIE_PATH = variables["MOVIE_PATH"]
 
 print(f"Updating TV shows from {TV_PATH} and movies from {MOVIE_PATH}")
 
@@ -19,7 +22,9 @@ def rename_show_poster(path):
             for file_name in os.listdir(season_path):
                 if "folder" in file_name and file_name.endswith(".jpg"):
                     old_path = os.path.join(season_path, file_name)
-                    new_path = os.path.join(season_path, season.replace(" ", "") + ".jpg")
+                    new_path = os.path.join(
+                        season_path, season.replace(" ", "") + ".jpg"
+                    )
 
                     shutil.copy(old_path, new_path)
 
@@ -40,11 +45,23 @@ def rename_backdrop_file(path, movie=False):
 
         movie_file_name = movie_file_name[0].split(".mkv")[0]
 
-        for image_type in ["backdrop", "landscape", "logo", "poster", "banner", "clearart", "discart"]:
+        for image_type in [
+            "backdrop",
+            "landscape",
+            "logo",
+            "poster",
+            "banner",
+            "clearart",
+            "discart",
+        ]:
             for extension in [".jpg", ".png"]:
-                file_path = os.path.join(path, f"{movie_file_name}-{image_type}{extension}")
+                file_path = os.path.join(
+                    path, f"{movie_file_name}-{image_type}{extension}"
+                )
                 if os.path.isfile(file_path):
-                    shutil.copy(file_path, os.path.join(path, f"{image_type}{extension}"))
+                    shutil.copy(
+                        file_path, os.path.join(path, f"{image_type}{extension}")
+                    )
                     os.remove(file_path)
 
             # delete any posters, backdrops, logos, etc that are NOT our movie's file name
@@ -70,8 +87,11 @@ def rename_backdrop_file(path, movie=False):
         # otherwise, we will delete all "backdrop.jpg" and "backdropX.jpg" until the highest X
         else:
             # get our list of X for backdropX
-            backdrop_nums = [int(b.split("backdrop")[-1].split(".jpg")[0]) for b in backdrop_list if
-                             b != "backdrop.jpg"]
+            backdrop_nums = [
+                int(b.split("backdrop")[-1].split(".jpg")[0])
+                for b in backdrop_list
+                if b != "backdrop.jpg"
+            ]
             backdrop_nums.sort()
 
             good_backdrop_file = f"backdrop{backdrop_nums[-1]}.jpg"
@@ -95,7 +115,7 @@ def rename_backdrop_file(path, movie=False):
 
 
 def remove_tdarrcache_files(path):
-    for filename in glob.iglob(path + '**/*TdarrCache*', recursive=True):
+    for filename in glob.iglob(path + "**/*TdarrCache*", recursive=True):
         os.remove(filename)
 
     return True

@@ -1,11 +1,13 @@
-import glob
 import os
 import shutil
 import time
+import json
 
+with open("variables.json", "r") as f:
+    variables = json.load(f)
 
-TV_PATH = r"/mnt/user/TV/"
-MOVIE_PATH = r"/mnt/user/Movies/"
+TV_PATH = variables["TV_PATH"]
+MOVIE_PATH = variables["MOVIE_PATH"]
 
 print(f"Deleting 'Plex Versions' from {TV_PATH} and {MOVIE_PATH}")
 

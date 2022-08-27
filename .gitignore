@@ -1,2 +1,5 @@
 
 settings/config.json
+vars.txt
+variables.json
+.idea*

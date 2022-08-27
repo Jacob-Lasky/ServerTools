@@ -1,0 +1,6 @@
+{
+    "baseurl": "http://local_host:32400",
+    "token": "PLEX_TOKEN_HERE",
+    "TV_PATH": "/path/to/tv/",
+    "MOVIE_PATH": "/path/to/movies/"
+}
