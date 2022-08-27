@@ -92,8 +92,43 @@ def rename_backdrop_file(path, movie=False):
             os.remove(os.path.join(path, good_backdrop_file))
 
     return True
+
+
 def remove_tdarrcache_files(path):
     for filename in glob.iglob(path + '**/*TdarrCache*', recursive=True):
         os.remove(filename)
 
     return True
+
+
+# work with TV shows #
+print("Removing '*TdarrCache*' files from TV shows")
+remove_tdarrcache_files(TV_PATH)
+
+shows = list(os.listdir(TV_PATH))
+
+# go through all of our shows
+for show in shows:
+    print(f"Renaming items in {show}")
+
+    show_path = os.path.join(TV_PATH, show)
+
+    rename_show_poster(show_path)
+
+    rename_backdrop_file(show_path)
+
+# work with movies directory #
+print("Removing '*TdarrCache*' files from movies")
+remove_tdarrcache_files(MOVIE_PATH)
+
+movies = list(os.listdir(MOVIE_PATH))
+
+# go through all of our movies
+for movie in movies:
+    print(f"Renaming items in {movie}")
+
+    movie_path = os.path.join(MOVIE_PATH, movie)
+
+    rename_backdrop_file(movie_path, movie=True)
+
+print("DONE")
