@@ -24,6 +24,8 @@ def rename_show_poster(path):
                     shutil.copy(old_path, new_path)
 
     return True
+
+
 def rename_backdrop_file(path, movie=False):
     backdrop_list = [file for file in os.listdir(path) if "backdrop" in file]
 
@@ -88,5 +90,10 @@ def rename_backdrop_file(path, movie=False):
 
             # and finally, delete our backdropX.jpg
             os.remove(os.path.join(path, good_backdrop_file))
+
+    return True
+def remove_tdarrcache_files(path):
+    for filename in glob.iglob(path + '**/*TdarrCache*', recursive=True):
+        os.remove(filename)
 
     return True
