@@ -3,6 +3,7 @@ import os
 import shutil
 import json
 
+
 with open("variables.json", "r") as f:
     variables = json.load(f)
 

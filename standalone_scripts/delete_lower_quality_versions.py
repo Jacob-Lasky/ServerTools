@@ -3,8 +3,10 @@ from plexapi.server import PlexServer
 import os
 import json
 
+
 with open("variables.json", "r") as f:
     variables = json.load(f)
+
 baseurl = variables["baseurl"]
 token = variables["token"]
 plex = PlexServer(baseurl, token)
