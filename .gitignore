@@ -3,3 +3,4 @@ settings/config.json
 vars.txt
 variables.json
 .idea*
+text_recognition/gcloud-authentication.json
