@@ -4,3 +4,4 @@ vars.txt
 variables.json
 .idea*
 text_recognition/gcloud-authentication.json
+text_recognition/image_results_database.json

@@ -1,5 +1,8 @@
 import io
 import os
+import re
+
+from PIL import Image, ImageDraw, ImageFont
 
 import datetime as dt
 
@@ -57,6 +60,24 @@ def match_movie_text(movie, response, verbose=False):
     return result, percent_match
 
 
+def calculate_true_fontsize(img, caption, font_type="impact.ttf", img_fraction=0.8):
+    """
+    :param img_fraction: proportion of image for the text to fit into
+    """
+    fontsize = 1  # starting font size
+
+    font = ImageFont.truetype(font_type, fontsize)
+    while font.getsize(caption)[0] < img_fraction * img.size[0]:
+        # iterate until the text size is just larger than the criteria
+        fontsize += 1
+        font = ImageFont.truetype(font_type, fontsize)
+
+    # optionally de-increment to be sure it is less than criteria
+    fontsize -= 1
+
+    return fontsize
+
+
 def get_img_text(img_path):
     with io.open(img_path, "rb") as image_file:
         content = image_file.read()
@@ -65,6 +86,42 @@ def get_img_text(img_path):
 
     response = client.text_detection(image=image)
     return response
+
+
+def add_text_to_foreground(img_path, caption):
+    caption = caption.replace(",", ",\n").replace(
+        ":", ":\n"
+    )  # add line breaks where we have commas or colons
+
+    with Image.open(img_path) as img:
+        W, H = img.size
+
+        d = ImageDraw.Draw(img)
+        font = ImageFont.truetype(
+            "impact.ttf", size=calculate_true_fontsize(img, caption)
+        )
+        w, h = d.textsize(caption, font)
+        d.text(
+            ((W - w) / 2, (H - h) / 2),
+            caption,
+            fill="white",
+            font=font,
+            stroke_width=2,
+            stroke_fill="black",
+        )
+        img.save(img_path)
+
+
+def sanitize_movie_str(movie):
+    # Movie, The (2000) {imdb-123456} --> Movie, The
+    movie_str = re.split(" (\(\d{4}\)) ", movie)[0]
+
+    # Movie, (The, A, An) --> (The, A, An) Movie
+    if re.search("(, The|, A|, An)$", movie_str):
+        movie_split = re.split("(, The|, A|, An)$", movie_str)
+        movie_str = f"{movie_split[1].replace(', ', '')} {movie_split[0]}"
+
+    return movie_str
 
 
 # initialize our "database"
@@ -81,14 +138,24 @@ for n, movie in enumerate(os.listdir(MOVIE_PATH)):
     folder = os.path.join(MOVIE_PATH, movie)
     img_path = os.path.join(folder, "backdrop.jpg")
 
-    if movie not in json_db["data"]:
+    if (
+        movie not in json_db["data"]
+        or json_db["data"][movie]["backdrop_result"] == "NO BACKDROP.JPG FILE"
+    ):
         json_db["data"][movie] = {}
-        json_db["data"][movie]["backdrop_last_modified_epoch"] = os.path.getmtime(
-            img_path
-        )
-        json_db["data"][movie][
-            "last_image_search_epoch"
-        ] = 0  # we've never searched for it
+
+        if os.path.exists(img_path):
+            json_db["data"][movie]["backdrop_last_modified_epoch"] = os.path.getmtime(
+                img_path
+            )
+            json_db["data"][movie][
+                "last_image_search_epoch"
+            ] = 0  # we've never searched for it
+            json_db["data"][movie]["backdrop_result"] = ""
+
+        else:
+            json_db["data"][movie]["backdrop_result"] = "NO BACKDROP.JPG FILE"
+            continue
 
     # movie is in our db, so we need to check and see if we last searched for this image before it was last modified
     if (
@@ -102,12 +169,20 @@ for n, movie in enumerate(os.listdir(MOVIE_PATH)):
         else:
             print(f"{movie}: backdrop was modified since the last search.")
 
+        movie_str = sanitize_movie_str(movie)
+
         response = get_img_text(img_path)
-        result, percent_match = match_movie_text(movie, response, verbose)
+        result, percent_match = match_movie_text(movie_str, response, verbose)
 
         json_db["data"][movie]["backdrop_text"] = response.full_text_annotation.text
         json_db["data"][movie]["backdrop_result"] = result
         json_db["data"][movie]["backdrop_percent_match"] = percent_match
+
+        print(result)
+        if result == "NO TEXT FOUND":
+            print(f"Adding caption to {movie}")
+            add_text_to_foreground(img_path, caption=movie_str)
+            break
 
         clean_text = response.full_text_annotation.text.replace("\n", " ")
 
