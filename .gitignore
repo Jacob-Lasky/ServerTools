@@ -5,3 +5,4 @@ variables.json
 .idea*
 text_recognition/gcloud-authentication.json
 text_recognition/image_results_database.json
+standalone_scripts/update_dns.py
