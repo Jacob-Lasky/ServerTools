@@ -677,6 +677,8 @@ copy_episodes() {
                     echo "    ❌ File exists: $relative_path"
                 else
                     cp "$file" "$file_sync_path"
+                    # Ensure the copied file is readable by fixing permissions
+                    chmod 644 "$file_sync_path" 2>/dev/null || true
                     echo "    ✅ Copied: $relative_path"
                 fi
             done
@@ -777,16 +779,21 @@ copy_movies() {
             echo "🎬 Copying ${#associated_files[@]} files for movie: $(basename "$movie_path")"
             
             for file in "${associated_files[@]}"; do
-                local movie_name=$(basename "$file")
-                local movie_sync_path="$SYNC_DIR/movies/$movie_name"
+                local relative_path=$(realpath --relative-to="$MOVIE_SOURCE_DIR" "$file")
+                local movie_sync_path="$SYNC_DIR/movies/$relative_path"
+                local movie_sync_dir=$(dirname "$movie_sync_path")
+                
+                mkdir -p "$movie_sync_dir"
                 
                 if [ -L "$movie_sync_path" ]; then
-                    echo "    ⚠️  Already copied: $movie_name"
+                    echo "    ⚠️  Already copied: $relative_path"
                 elif [ -e "$movie_sync_path" ]; then
-                    echo "    ❌ File exists: $movie_name"
+                    echo "    ❌ File exists: $relative_path"
                 else
                     cp "$file" "$movie_sync_path"
-                    echo "    ✅ Copied: $movie_name"
+                    # Ensure the copied file is readable by fixing permissions
+                    chmod 644 "$movie_sync_path" 2>/dev/null || true
+                    echo "    ✅ Copied: $relative_path"
                 fi
             done
         fi
